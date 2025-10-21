@@ -68,6 +68,15 @@ async function callApi({ question, context = "", topic = "" }) {
   const settings = await loadSettings();
   const headers = { "Content-Type": "application/json", "Accept": "application/json" };
   applyAuthHeader(headers, settings);
+  // Force Bearer for Hugging Face tokens to avoid 401 when misconfigured
+  if ((settings.providerPreset || "") === "hf-inference") {
+    const headerName = settings.apiKeyHeader || "Authorization";
+    const cur = headers[headerName] || "";
+    const key = settings.apiKey || "";
+    if (key && key.startsWith("hf_") && !/^Bearer\s/i.test(cur)) {
+      headers[headerName] = `Bearer ${key}`;
+    }
+  }
 
   // Provider-specific handling
   const preset = settings.providerPreset || "generic";
