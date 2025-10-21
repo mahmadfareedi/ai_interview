@@ -141,26 +141,44 @@ async function callApi({ question, context = "", topic = "" }) {
 }
 
 function applyAuthHeader(headers, settings) {
-  const apiKey = settings.apiKey || "";
-  if (!apiKey) return;
   const headerName = settings.apiKeyHeader || "Authorization";
   const scheme = settings.authScheme || (settings.useBearer ? "bearer" : "raw");
   if (scheme === "none") return;
+
   if (scheme === "bearer") {
+    const apiKey = settings.apiKey || "";
+    if (!apiKey) return;
     headers[headerName] = `Bearer ${apiKey}`;
     return;
   }
+
   if (scheme === "basic") {
-    try {
-      const encoded = btoa(apiKey); // expects "username:password"
-      headers[headerName] = `Basic ${encoded}`;
-    } catch (_) {
-      headers[headerName] = `Basic ${apiKey}`; // if already encoded
+    const user = settings.basicUsername || "";
+    const pass = settings.basicPassword || "";
+    let encoded;
+    if (user || pass) {
+      encoded = btoa(`${user}:${pass}`);
+    } else if ((settings.apiKey || "").includes(":")) {
+      encoded = btoa(settings.apiKey);
+    } else if (isProbablyBase64(settings.apiKey || "")) {
+      encoded = settings.apiKey;
+    } else if (settings.apiKey) {
+      // Last resort: treat apiKey as raw pair and encode it
+      encoded = btoa(settings.apiKey);
+    } else {
+      return;
     }
+    headers[headerName] = `Basic ${encoded}`;
     return;
   }
-  // raw
-  headers[headerName] = apiKey;
+
+  // raw value in the header
+  if (settings.apiKey) headers[headerName] = settings.apiKey;
+}
+
+function isProbablyBase64(s) {
+  if (!s || s.length < 12 || s.length % 4 !== 0) return false;
+  return /^[A-Za-z0-9+/]+={0,2}$/.test(s);
 }
 
 function fetchWithTimeout(url, options, timeoutMs) {

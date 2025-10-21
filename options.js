@@ -5,6 +5,8 @@ const els = {
   apiKey: $("#apiKey"),
   apiKeyHeader: $("#apiKeyHeader"),
   authScheme: $("#authScheme"),
+  basicUsername: $("#basicUsername"),
+  basicPassword: $("#basicPassword"),
   questionField: $("#questionField"),
   contextField: $("#contextField"),
   topicField: $("#topicField"),
@@ -38,6 +40,8 @@ const DEFAULTS = {
   apiKeyHeader: "Authorization",
   useBearer: true, // legacy
   authScheme: "bearer",
+  basicUsername: "",
+  basicPassword: "",
   questionField: "question",
   contextField: "context",
   topicField: "topic",
@@ -66,6 +70,8 @@ function load() {
     // Back-compat: map legacy useBearer to authScheme
     const scheme = cfg.authScheme || (cfg.useBearer ? "bearer" : (cfg.apiKey ? "raw" : "none"));
     els.authScheme.value = scheme;
+    els.basicUsername.value = cfg.basicUsername || "";
+    els.basicPassword.value = cfg.basicPassword || "";
     els.questionField.value = cfg.questionField || "question";
     els.contextField.value = cfg.contextField || "context";
     els.topicField.value = cfg.topicField || "topic";
@@ -87,6 +93,7 @@ function load() {
     els.showCaptionBar.checked = cfg.showCaptionBar !== false;
     els.captionDurationSeconds.value = String(cfg.captionDurationSeconds ?? 12);
   });
+  toggleBasicRow();
 }
 
 function save() {
@@ -95,6 +102,8 @@ function save() {
     apiKey: els.apiKey.value.trim(),
     apiKeyHeader: els.apiKeyHeader.value.trim() || "Authorization",
     authScheme: els.authScheme.value,
+    basicUsername: els.basicUsername.value.trim(),
+    basicPassword: els.basicPassword.value,
     questionField: els.questionField.value.trim() || "question",
     contextField: els.contextField.value.trim() || "context",
     topicField: els.topicField.value.trim() || "topic",
@@ -147,5 +156,12 @@ function saveAuto() {
 els.save.addEventListener("click", save);
 els.test.addEventListener("click", testCall);
 els.saveAuto.addEventListener("click", saveAuto);
+els.authScheme.addEventListener("change", toggleBasicRow);
 
 document.addEventListener("DOMContentLoaded", load);
+
+function toggleBasicRow() {
+  const row = document.querySelector('#basicAuthRow');
+  if (!row) return;
+  row.style.display = (els.authScheme.value === 'basic') ? '' : 'none';
+}
