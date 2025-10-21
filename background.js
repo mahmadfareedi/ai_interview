@@ -66,7 +66,7 @@ function buildPrompt({ question, context = "", topic = "", systemPrompt }) {
 
 async function callApi({ question, context = "", topic = "" }) {
   const settings = await loadSettings();
-  const headers = { "Content-Type": "application/json" };
+  const headers = { "Content-Type": "application/json", "Accept": "application/json" };
   applyAuthHeader(headers, settings);
 
   // Provider-specific handling
@@ -113,7 +113,8 @@ async function callApi({ question, context = "", topic = "" }) {
   const res = await fetchWithTimeout(url, { method: "POST", headers, body: JSON.stringify(body) }, settings.timeoutMs || 45000);
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`API error ${res.status}: ${text}`);
+    const brief = summarizeResponse(text);
+    throw new Error(`API error ${res.status} (${preset}) at ${url}: ${brief}`);
   }
 
   // Parse response
@@ -192,6 +193,15 @@ function fetchWithTimeout(url, options, timeoutMs) {
       .then((res) => { clearTimeout(id); resolve(res); })
       .catch((err) => { clearTimeout(id); reject(err); });
   });
+}
+
+function summarizeResponse(text) {
+  if (!text) return "";
+  const t = String(text).trim();
+  if (/<!doctype html/i.test(t) || /<html[\s>]/i.test(t)) {
+    return "HTML page returned (likely wrong endpoint or auth redirect)";
+  }
+  return t.slice(0, 240);
 }
 
 async function getActiveTab() {
