@@ -75,7 +75,52 @@
       <p class="muted">The extension makes a JSON POST to your API, with keys you set above. Example body: <code>{"question":"...","context":"...","topic":"..."}</code>. Configure the response path to extract the answer string.</p>
     </div>
 
+    <div class="card">
+      <h2>Auto Answer</h2>
+      <label><input type="checkbox" id="autoEnabled" /> Enable auto-answer from live captions</label>
+
+      <div class="row">
+        <div class="col">
+          <label for="defaultTopic">Default Topic</label>
+          <select id="defaultTopic">
+            <option value="general">General</option>
+            <option value="data_analytics">Data Analytics</option>
+            <option value="data_engineering">Data Engineering</option>
+            <option value="ml_engineering">ML Engineering</option>
+          </select>
+        </div>
+        <div class="col">
+          <label for="cooldownSeconds">Cooldown (seconds)</label>
+          <input id="cooldownSeconds" type="text" value="12" />
+        </div>
+        <div class="col">
+          <label for="minLength">Min question length</label>
+          <input id="minLength" type="text" value="20" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Sites</label>
+          <label><input type="checkbox" id="siteMeet" checked /> meet.google.com</label>
+          <label><input type="checkbox" id="siteZoom" checked /> zoom.us / zoom.com</label>
+          <label><input type="checkbox" id="siteTeams" checked /> teams.microsoft.com</label>
+        </div>
+        <div class="col">
+          <label>Detection</label>
+          <label><input type="checkbox" id="requireQuestionMark" /> Require “?”</label>
+          <label><input type="checkbox" id="showCaptionBar" checked /> Show caption bar</label>
+          <label for="captionDurationSeconds">Caption duration (s)</label>
+          <input id="captionDurationSeconds" type="text" value="12" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="saveAuto" class="btn">Save Auto Settings</button>
+        <span id="statusAuto" class="muted"></span>
+      </div>
+    </div>
+
     <script src="options.js"></script>
   </body>
   </html>
-

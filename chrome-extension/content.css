@@ -16,6 +16,26 @@
   box-shadow: 0 10px 30px rgba(0,0,0,0.45);
 }
 
+#ai-interview-bot-caption {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2147483646;
+  max-width: min(90vw, 900px);
+  background: rgba(15, 23, 42, 0.92);
+  color: #e5e7eb;
+  border: 1px solid rgba(55, 65, 81, 0.8);
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+#ai-interview-bot-caption .aib-line { white-space: pre-wrap; word-wrap: break-word; }
+#ai-interview-bot-caption .aib-q { opacity: 0.9; }
+#ai-interview-bot-caption .aib-a { margin-top: 4px; font-weight: 600; }
+
 #ai-interview-bot-overlay .aib-header {
   display: flex;
   align-items: center;
@@ -77,4 +97,3 @@
 #ai-interview-bot-overlay .aib-answer {
   background: #0b1325;
 }
-

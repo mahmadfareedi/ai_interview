@@ -38,6 +38,13 @@ If your API uses different keys, change them in Settings.
 - Or click the popup, choose a topic, type a question, and click Ask
 - Answers show in a draggable overlay; click Copy to copy
 
+### Auto Answer (captions)
+
+- Turn on in Settings → "Auto Answer"
+- Supported sites: Google Meet, Zoom Web, Microsoft Teams Web (heuristic DOM watchers)
+- The extension polls live captions/transcript on these sites, detects likely questions, sends them to your API, and shows a bottom caption bar with the answer. Overlays are not opened automatically to avoid spam.
+- Tweak: cooldown, require "?", min question length, caption duration, default topic
+
 ## Shortcuts
 
 - Ask selection: Alt+Q
@@ -62,6 +69,7 @@ You can change shortcuts in Chrome → Extensions → Keyboard shortcuts.
 - Overlay not showing: some pages (e.g., Chrome Web Store, `chrome://` pages) block content scripts; the extension falls back to a notification with the answer.
 - CORS: Service worker fetches are allowed; ensure your API accepts requests from extensions. If needed, add your extension ID to an allowlist.
 - Empty answer: Check the Response Path in Settings matches your API response.
+- Auto not triggering: Ensure captions/transcript are enabled in the meeting UI. DOM structures change frequently; if a platform updates, try raising min length or disabling "Require ?". For custom platforms, add CSS selectors in `content.js` → `CANDIDATE_SELECTORS`.
 
 ## Customize
 
@@ -69,4 +77,3 @@ You can change shortcuts in Chrome → Extensions → Keyboard shortcuts.
 - Overlay logic: `content.js`
 - API call mapping: `background.js` → `callApi()`
 - Popup UI behavior: `popup.html`/`popup.js`
-

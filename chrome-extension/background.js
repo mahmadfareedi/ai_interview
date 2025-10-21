@@ -147,7 +147,7 @@ async function handleAsk({ source, question, context, topic }) {
 
   const answer = await callApi({ question, context, topic });
 
-  if (tabId) {
+  if (tabId && source !== "auto") {
     await showAnswerOverlay(tabId, { question, answer, topic });
   }
   return { question, answer };
@@ -199,8 +199,8 @@ chrome.commands.onCommand.addListener(async (command) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     if (message?.type === "ask") {
-      const { question, context, topic } = message;
-      const result = await handleAsk({ source: "popup", question, context, topic });
+      const { question, context, topic, source } = message;
+      const result = await handleAsk({ source: source || "popup", question, context, topic });
       sendResponse({ ok: true, ...result });
       return;
     }
@@ -221,4 +221,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   })();
   return true; // async response
 });
-
