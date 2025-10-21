@@ -53,10 +53,12 @@
           <input id="apiKeyHeader" type="text" value="Authorization" />
         </div>
         <div class="col">
-          <label for="useBearer">Use Bearer prefix</label>
-          <select id="useBearer">
-            <option value="true">Yes</option>
-            <option value="false">No</option>
+          <label for="authScheme">Auth Scheme</label>
+          <select id="authScheme">
+            <option value="none">None</option>
+            <option value="bearer">Bearer</option>
+            <option value="basic">Basic (username:password)</option>
+            <option value="raw">Raw header value</option>
           </select>
         </div>
       </div>

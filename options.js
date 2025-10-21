@@ -4,7 +4,7 @@ const els = {
   apiUrl: $("#apiUrl"),
   apiKey: $("#apiKey"),
   apiKeyHeader: $("#apiKeyHeader"),
-  useBearer: $("#useBearer"),
+  authScheme: $("#authScheme"),
   questionField: $("#questionField"),
   contextField: $("#contextField"),
   topicField: $("#topicField"),
@@ -36,7 +36,8 @@ const DEFAULTS = {
   apiUrl: "",
   apiKey: "",
   apiKeyHeader: "Authorization",
-  useBearer: true,
+  useBearer: true, // legacy
+  authScheme: "bearer",
   questionField: "question",
   contextField: "context",
   topicField: "topic",
@@ -62,7 +63,9 @@ function load() {
     els.apiUrl.value = cfg.apiUrl || "";
     els.apiKey.value = cfg.apiKey || "";
     els.apiKeyHeader.value = cfg.apiKeyHeader || "Authorization";
-    els.useBearer.value = String(!!cfg.useBearer);
+    // Back-compat: map legacy useBearer to authScheme
+    const scheme = cfg.authScheme || (cfg.useBearer ? "bearer" : (cfg.apiKey ? "raw" : "none"));
+    els.authScheme.value = scheme;
     els.questionField.value = cfg.questionField || "question";
     els.contextField.value = cfg.contextField || "context";
     els.topicField.value = cfg.topicField || "topic";
@@ -91,7 +94,7 @@ function save() {
     apiUrl: els.apiUrl.value.trim(),
     apiKey: els.apiKey.value.trim(),
     apiKeyHeader: els.apiKeyHeader.value.trim() || "Authorization",
-    useBearer: els.useBearer.value === "true",
+    authScheme: els.authScheme.value,
     questionField: els.questionField.value.trim() || "question",
     contextField: els.contextField.value.trim() || "context",
     topicField: els.topicField.value.trim() || "topic",

@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS = {
   apiKey: "",
   apiKeyHeader: "Authorization",
   useBearer: true,
+  authScheme: "bearer", // none | bearer | basic | raw (legacy useBearer still supported)
   // Generic JSON mode fields
   questionField: "question",
   contextField: "context",
@@ -66,11 +67,7 @@ function buildPrompt({ question, context = "", topic = "", systemPrompt }) {
 async function callApi({ question, context = "", topic = "" }) {
   const settings = await loadSettings();
   const headers = { "Content-Type": "application/json" };
-  if (settings.apiKey) {
-    const headerName = settings.apiKeyHeader || "Authorization";
-    const value = settings.useBearer ? `Bearer ${settings.apiKey}` : settings.apiKey;
-    headers[headerName] = value;
-  }
+  applyAuthHeader(headers, settings);
 
   // Provider-specific handling
   const preset = settings.providerPreset || "generic";
@@ -141,6 +138,29 @@ async function callApi({ question, context = "", topic = "" }) {
   // Generic path
   const value = parseByPath(json, settings.responsePath || "answer");
   return value == null ? JSON.stringify(json) : (typeof value === "string" ? value : JSON.stringify(value));
+}
+
+function applyAuthHeader(headers, settings) {
+  const apiKey = settings.apiKey || "";
+  if (!apiKey) return;
+  const headerName = settings.apiKeyHeader || "Authorization";
+  const scheme = settings.authScheme || (settings.useBearer ? "bearer" : "raw");
+  if (scheme === "none") return;
+  if (scheme === "bearer") {
+    headers[headerName] = `Bearer ${apiKey}`;
+    return;
+  }
+  if (scheme === "basic") {
+    try {
+      const encoded = btoa(apiKey); // expects "username:password"
+      headers[headerName] = `Basic ${encoded}`;
+    } catch (_) {
+      headers[headerName] = `Basic ${apiKey}`; // if already encoded
+    }
+    return;
+  }
+  // raw
+  headers[headerName] = apiKey;
 }
 
 function fetchWithTimeout(url, options, timeoutMs) {
