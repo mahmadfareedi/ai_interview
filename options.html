@@ -30,6 +30,21 @@
 
       <div class="row">
         <div class="col">
+          <label for="providerPreset">Provider Preset</label>
+          <select id="providerPreset">
+            <option value="hf-inference">Hugging Face Inference (text-generation)</option>
+            <option value="openai-compatible">OpenAI-compatible (Together/OpenRouter/Fireworks)</option>
+            <option value="generic">Generic JSON</option>
+          </select>
+        </div>
+        <div class="col">
+          <label for="modelId">Model ID</label>
+          <input id="modelId" type="text" value="meta-llama/Llama-3.1-8B-Instruct" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
           <label for="apiKey">API Key (optional)</label>
           <input id="apiKey" type="password" placeholder="sk-..." />
         </div>
@@ -65,6 +80,20 @@
       <h2>Response</h2>
       <label for="responsePath">Response Path (dot path)</label>
       <input id="responsePath" type="text" value="answer" />
+
+      <h2>Generation</h2>
+      <div class="row">
+        <div class="col">
+          <label for="temperature">Temperature</label>
+          <input id="temperature" type="text" value="0.2" />
+        </div>
+        <div class="col">
+          <label for="maxTokens">Max Tokens</label>
+          <input id="maxTokens" type="text" value="512" />
+        </div>
+      </div>
+      <label for="systemPrompt">System Prompt</label>
+      <input id="systemPrompt" type="text" value="You are a concise assistant for interview questions. Answer clearly and briefly." />
 
       <div class="actions">
         <button id="save" class="btn">Save</button>

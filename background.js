@@ -6,10 +6,18 @@ const DEFAULT_SETTINGS = {
   apiKey: "",
   apiKeyHeader: "Authorization",
   useBearer: true,
+  // Generic JSON mode fields
   questionField: "question",
   contextField: "context",
   topicField: "topic",
-  responsePath: "answer", // JSON path to extract answer (e.g., "choices.0.message")
+  responsePath: "answer", // JSON path to extract answer (e.g., "choices.0.message.content")
+
+  // Provider preset (simple switch for common APIs)
+  providerPreset: "hf-inference", // "generic" | "hf-inference" | "openai-compatible"
+  modelId: "meta-llama/Llama-3.1-8B-Instruct",
+  systemPrompt: "You are a concise assistant for interview questions. Answer clearly and briefly.",
+  temperature: 0.2,
+  maxTokens: 512,
 };
 
 function loadSettings() {
@@ -44,17 +52,18 @@ function parseByPath(obj, path) {
   return cur;
 }
 
+function buildPrompt({ question, context = "", topic = "", systemPrompt }) {
+  const pieces = [];
+  if (systemPrompt) pieces.push(systemPrompt);
+  if (topic) pieces.push(`Topic: ${topic}`);
+  if (context) pieces.push(`Context: ${context}`);
+  pieces.push(`Question: ${question}`);
+  pieces.push("Answer succinctly.");
+  return pieces.filter(Boolean).join("\n\n");
+}
+
 async function callApi({ question, context = "", topic = "" }) {
   const settings = await loadSettings();
-  if (!settings.apiUrl) {
-    throw new Error("API URL is not configured. Set it in Options.");
-  }
-
-  const body = {};
-  body[settings.questionField || "question"] = question;
-  if (context) body[settings.contextField || "context"] = context;
-  if (topic) body[settings.topicField || "topic"] = topic;
-
   const headers = { "Content-Type": "application/json" };
   if (settings.apiKey) {
     const headerName = settings.apiKeyHeader || "Authorization";
@@ -62,34 +71,75 @@ async function callApi({ question, context = "", topic = "" }) {
     headers[headerName] = value;
   }
 
-  const res = await fetch(settings.apiUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
+  // Provider-specific handling
+  const preset = settings.providerPreset || "generic";
+  let url = settings.apiUrl || "";
+  let body;
 
+  if (preset === "hf-inference") {
+    const model = settings.modelId || "meta-llama/Llama-3.1-8B-Instruct";
+    if (!url) url = `https://api-inference.huggingface.co/models/${model}`;
+    const prompt = buildPrompt({ question, context, topic, systemPrompt: settings.systemPrompt });
+    body = {
+      inputs: prompt,
+      parameters: {
+        max_new_tokens: Math.max(16, settings.maxTokens || 512),
+        temperature: Number(settings.temperature ?? 0.2),
+        return_full_text: false,
+      },
+    };
+  } else if (preset === "openai-compatible") {
+    // e.g., Together, Fireworks, OpenRouter (OpenAI format)
+    if (!url) throw new Error("API URL is required for OpenAI-compatible preset.");
+    const model = settings.modelId || "meta-llama/Llama-3.1-8B-Instruct";
+    const sys = settings.systemPrompt || "You are a concise assistant.";
+    const userContent = buildPrompt({ question, context, topic, systemPrompt: "" });
+    body = {
+      model,
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: userContent },
+      ],
+      temperature: Number(settings.temperature ?? 0.2),
+      max_tokens: Math.max(16, settings.maxTokens || 512),
+    };
+  } else {
+    // Generic JSON (original behavior)
+    if (!url) throw new Error("API URL is not configured. Set it in Options.");
+    body = {};
+    body[settings.questionField || "question"] = question;
+    if (context) body[settings.contextField || "context"] = context;
+    if (topic) body[settings.topicField || "topic"] = topic;
+  }
+
+  const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`API error ${res.status}: ${text}`);
   }
 
-  // Try parsing JSON, then extract by path; fall back to plain text
-  let answerText = "";
+  // Parse response
   const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) {
-    const json = await res.json();
-    const value = parseByPath(json, settings.responsePath || "answer");
-    answerText =
-      value == null
-        ? JSON.stringify(json)
-        : typeof value === "string"
-        ? value
-        : JSON.stringify(value);
-  } else {
-    answerText = await res.text();
+  if (!contentType.includes("application/json")) {
+    return await res.text();
   }
 
-  return answerText;
+  const json = await res.json();
+  if (preset === "hf-inference") {
+    // HF Inference can return an array [{generated_text: "..."}] or object with generated_text
+    if (Array.isArray(json) && json.length) {
+      const first = json[0];
+      return first?.generated_text || JSON.stringify(first);
+    }
+    return json?.generated_text || JSON.stringify(json);
+  }
+  if (preset === "openai-compatible") {
+    const ans = json?.choices?.[0]?.message?.content || json?.choices?.[0]?.text;
+    return ans || JSON.stringify(json);
+  }
+  // Generic path
+  const value = parseByPath(json, settings.responsePath || "answer");
+  return value == null ? JSON.stringify(json) : (typeof value === "string" ? value : JSON.stringify(value));
 }
 
 async function getActiveTab() {

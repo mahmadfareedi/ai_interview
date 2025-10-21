@@ -9,6 +9,11 @@ const els = {
   contextField: $("#contextField"),
   topicField: $("#topicField"),
   responsePath: $("#responsePath"),
+  providerPreset: $("#providerPreset"),
+  modelId: $("#modelId"),
+  temperature: $("#temperature"),
+  maxTokens: $("#maxTokens"),
+  systemPrompt: $("#systemPrompt"),
   save: $("#save"),
   test: $("#test"),
   status: $("#status"),
@@ -36,6 +41,11 @@ const DEFAULTS = {
   contextField: "context",
   topicField: "topic",
   responsePath: "answer",
+  providerPreset: "hf-inference",
+  modelId: "meta-llama/Llama-3.1-8B-Instruct",
+  temperature: 0.2,
+  maxTokens: 512,
+  systemPrompt: "You are a concise assistant for interview questions. Answer clearly and briefly.",
   // Auto defaults (keep in sync with content.js)
   autoEnabled: false,
   autoSites: { meet: true, zoom: true, teams: true },
@@ -57,6 +67,11 @@ function load() {
     els.contextField.value = cfg.contextField || "context";
     els.topicField.value = cfg.topicField || "topic";
     els.responsePath.value = cfg.responsePath || "answer";
+    els.providerPreset.value = cfg.providerPreset || "hf-inference";
+    els.modelId.value = cfg.modelId || "meta-llama/Llama-3.1-8B-Instruct";
+    els.temperature.value = String(cfg.temperature ?? 0.2);
+    els.maxTokens.value = String(cfg.maxTokens ?? 512);
+    els.systemPrompt.value = cfg.systemPrompt || "You are a concise assistant for interview questions. Answer clearly and briefly.";
     // Auto
     els.autoEnabled.checked = !!cfg.autoEnabled;
     els.defaultTopic.value = cfg.defaultTopic || "general";
@@ -81,6 +96,11 @@ function save() {
     contextField: els.contextField.value.trim() || "context",
     topicField: els.topicField.value.trim() || "topic",
     responsePath: els.responsePath.value.trim() || "answer",
+    providerPreset: els.providerPreset.value,
+    modelId: els.modelId.value.trim() || "meta-llama/Llama-3.1-8B-Instruct",
+    temperature: Math.max(0, parseFloat(els.temperature.value || "0.2") || 0.2),
+    maxTokens: Math.max(16, parseInt(els.maxTokens.value || "512", 10) || 512),
+    systemPrompt: els.systemPrompt.value.trim(),
   };
   chrome.storage.sync.set(patch, () => {
     els.status.textContent = "Saved.";
