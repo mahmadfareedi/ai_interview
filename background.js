@@ -109,6 +109,7 @@ async function callApi({ question, context = "", topic = "" }) {
       ],
       temperature: Number(settings.temperature ?? 0.2),
       max_tokens: Math.max(16, settings.maxTokens || 512),
+      stream: false,
     };
   } else {
     // Generic JSON (original behavior)
