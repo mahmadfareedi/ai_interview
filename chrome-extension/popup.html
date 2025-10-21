@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Interview Bot</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 0; padding: 12px; width: 360px; }
+      h1 { font-size: 16px; margin: 0 0 8px; }
+      label { display: block; font-size: 12px; color: #374151; margin: 8px 0 4px; }
+      textarea, select, input[type=text] { width: 100%; box-sizing: border-box; font-size: 13px; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; }
+      textarea { resize: vertical; min-height: 80px; }
+      .row { display: flex; gap: 8px; align-items: center; }
+      .btn { appearance: none; background: #111827; color: #fff; border: 1px solid #111827; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+      .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .muted { color: #6b7280; font-size: 12px; }
+      .answer { white-space: pre-wrap; background: #f3f4f6; border: 1px solid #e5e7eb; padding: 8px; border-radius: 6px; margin-top: 8px; max-height: 260px; overflow: auto; }
+      .actions { display: flex; gap: 8px; justify-content: space-between; align-items: center; margin-top: 8px; }
+      .link { color: #2563eb; text-decoration: none; }
+      .toggle { cursor: pointer; color: #2563eb; font-size: 12px; }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <h1>AI Interview Bot</h1>
+    <label for="topic">Topic</label>
+    <select id="topic">
+      <option value="general">General</option>
+      <option value="data_analytics">Data Analytics</option>
+      <option value="data_engineering">Data Engineering</option>
+      <option value="ml_engineering">ML Engineering</option>
+    </select>
+
+    <label for="question">Question</label>
+    <textarea id="question" placeholder="Type a question, or select text on the page and use Alt+Q"></textarea>
+
+    <div class="row actions">
+      <button id="ask" class="btn">Ask</button>
+      <span id="toggleContext" class="toggle">Add context</span>
+    </div>
+
+    <div id="contextWrap" class="hidden">
+      <label for="context">Context (optional)</label>
+      <textarea id="context" placeholder="Paste meeting notes, data schema, etc."></textarea>
+    </div>
+
+    <div id="answerWrap" class="hidden">
+      <label>Answer</label>
+      <div id="answer" class="answer"></div>
+      <div class="row actions">
+        <button id="copy" class="btn" title="Copy answer">Copy</button>
+        <a id="openOptions" class="link" href="#">Settings</a>
+      </div>
+    </div>
+
+    <p class="muted">Tip: Select any text and press Alt+Q.</p>
+
+    <script src="popup.js"></script>
+  </body>
+  </html>
+
