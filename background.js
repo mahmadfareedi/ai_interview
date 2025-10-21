@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS = {
   systemPrompt: "You are a concise assistant for interview questions. Answer clearly and briefly.",
   temperature: 0.2,
   maxTokens: 512,
+  timeoutMs: 45000,
 };
 
 function loadSettings() {
@@ -112,7 +113,7 @@ async function callApi({ question, context = "", topic = "" }) {
     if (topic) body[settings.topicField || "topic"] = topic;
   }
 
-  const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+  const res = await fetchWithTimeout(url, { method: "POST", headers, body: JSON.stringify(body) }, settings.timeoutMs || 45000);
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`API error ${res.status}: ${text}`);
@@ -140,6 +141,19 @@ async function callApi({ question, context = "", topic = "" }) {
   // Generic path
   const value = parseByPath(json, settings.responsePath || "answer");
   return value == null ? JSON.stringify(json) : (typeof value === "string" ? value : JSON.stringify(value));
+}
+
+function fetchWithTimeout(url, options, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => {
+      try { ctrl.abort(); } catch (_) {}
+      reject(new Error(`Request timed out after ${timeoutMs} ms`));
+    }, Math.max(1000, timeoutMs || 30000));
+    fetch(url, { ...(options || {}), signal: ctrl.signal })
+      .then((res) => { clearTimeout(id); resolve(res); })
+      .catch((err) => { clearTimeout(id); reject(err); });
+  });
 }
 
 async function getActiveTab() {
@@ -249,9 +263,13 @@ chrome.commands.onCommand.addListener(async (command) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     if (message?.type === "ask") {
-      const { question, context, topic, source } = message;
-      const result = await handleAsk({ source: source || "popup", question, context, topic });
-      sendResponse({ ok: true, ...result });
+      try {
+        const { question, context, topic, source } = message;
+        const result = await handleAsk({ source: source || "popup", question, context, topic });
+        sendResponse({ ok: true, ...result });
+      } catch (e) {
+        sendResponse({ ok: false, error: String(e?.message || e) });
+      }
       return;
     }
     if (message?.type === "test-call") {
